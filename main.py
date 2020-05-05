@@ -86,7 +86,7 @@ def breed(animals, refractory_period):
                            age=0,
                            sex=random_gender(),
                            breed=refractory_period,
-                           calories=CALORIES_MEAL)
+                           calories=5)
 
             animals.append(child)
             # Set breed timer.
@@ -123,15 +123,15 @@ def update(frame_num, img, grid, rabbits, wolves, grass):
     # Update position, age and calories of rabbits.
     n_rabbits = len(rabbits)
     update_animals(rabbits, MAX_AGE_RABBIT)
-    n_rabbits_killed = len(rabbits) - n_rabbits
+    n_rabbits_killed = n_rabbits - len(rabbits)
     if n_rabbits_killed > 0:
-        print(n_rabbits_killed, 'elderly bunnies died of old age.', len(rabbits), 'remain')
+        print(n_rabbits_killed, 'elderly bunnies died of old age or starvation.', len(rabbits), 'remain')
     # Update position, age and calories of wolves.
     n_wolves = len(wolves)
     update_animals(wolves, MAX_AGE_WOLF)
-    n_wolves_killed = len(wolves) - n_wolves
+    n_wolves_killed = n_wolves - len(wolves)
     if n_wolves_killed > 0:
-        print(n_wolves_killed, 'elderly wolves died of old age.', len(wolves), 'remain')
+        print(n_wolves_killed, 'elderly wolves died of old age or starvation', len(wolves), 'remain')
     # Breed rabbits.
     n_rabbits = len(rabbits)
     breed(rabbits, REFRACTORY_PERIOD_RABBIT)
@@ -147,15 +147,15 @@ def update(frame_num, img, grid, rabbits, wolves, grass):
     # Wolf nom rabbit.
     n_rabbits = len(rabbits)
     feed(wolves, rabbits)
-    n_rabbits_eaten = len(rabbits) - n_rabbits
+    n_rabbits_eaten = n_rabbits - len(rabbits)
     if n_rabbits_eaten > 0:
         print(n_rabbits_killed, 'slow rabbits were devoured', len(rabbits), 'total')
     # Rabbit nom grass.
     n_grass = len(grass)
     feed(rabbits, grass)
-    n_grass_eaten = len(grass) - n_grass
+    n_grass_eaten = n_grass - len(grass)
     if n_grass_eaten > 0:
-        print(n_grass_killed, 'innocent patches of grass were devoured.', len(grass), 'total')
+        print(n_grass_eaten, 'innocent patches of grass were devoured.', len(grass), 'total')
 
     # Draw the image to display. NxN pixels, each pixel has 3 color channels (r, g, b).
     next_grid = np.zeros((N, N, 3), dtype=np.uint8)
@@ -209,7 +209,7 @@ img = ax.imshow(grid)
 ani = matplotlib.animation.FuncAnimation(fig, update,
                                          fargs=(img, grid, rabbits, wolves, grass),
                                          frames=10,
-                                         interval=50,
+                                         interval=150,
                                          save_count=50)
 
 plt.show()
