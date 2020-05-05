@@ -4,22 +4,25 @@ import matplotlib.animation
 
 MAX_AGE_RABBIT = 50
 MAX_AGE_WOLF = 80
+MAX_AGE_BEAR = 80
 
 N = 32  # Grid size.
 
-INITIAL_RABBITS = 50  # Number of initial rabbits.
-INITIAL_WOLVES = 50  # Number of initial wolves.
+INITIAL_RABBITS = 30  # Number of initial rabbits.
+INITIAL_WOLVES = 8  # Number of initial wolves.
+# INITIAL_BEARS = 5
 INITIAL_GRASS = 150
 REFRACTORY_PERIOD_RABBIT = 3
-REFRACTORY_PERIOD_WOLF = 4
+REFRACTORY_PERIOD_WOLF = 5
 
 GRASS_RATE = 50
 CALORIES_MAX = 100
 CALORIES_MEAL = 100
 
-COLOR_GRASS = (0, 255, 0)
+COLOR_GRASS = (0, 168, 107)
 COLOR_RABBIT = (0, 0, 255)  # (r, g, b)
 COLOR_WOLF = (255, 0, 0)  # (r, g, b)
+# COLOR_BEAR = (117, 71, 22)
 
 
 class Grass:
@@ -58,26 +61,26 @@ def random_gender():
     return 'm' if np.random.random() > 0.5 else 'f'
 
 
-def nearest_grass(pos, grass):
+def nearest_prey(pos, prey):
     x, y = pos
-    if any(g.pos == (x, y) for g in grass):
+    if any(p.pos == (x, y) for p in prey):
         return (x, y)
-    if any(g.pos == (x-1, y-1) for g in grass):
-        return (x-1, y-1)
-    if any(g.pos == (x-1, y) for g in grass):
-        return (x-1, y)
-    if any(g.pos == (x-1, y+1) for g in grass):
-        return (x-1, y+1)
-    if any(g.pos == (x, y-1) for g in grass):
-        return (x, y-1)
-    if any(g.pos == (x, y+1) for g in grass):
-        return (x, y+1)
-    if any(g.pos == (x+1, y-1) for g in grass):
-        return (x+1, y-1)
-    if any(g.pos == (x+1, y) for g in grass):
-        return (x+1, y)
-    if any(g.pos == (x+1, y+1) for g in grass):
-        return (x+1, y+1)
+    if any(p.pos == (x - 1, y - 1) for p in prey):
+        return (x - 1, y - 1)
+    if any(p.pos == (x - 1, y) for p in prey):
+        return (x - 1, y)
+    if any(p.pos == (x - 1, y + 1) for p in prey):
+        return (x - 1, y + 1)
+    if any(p.pos == (x, y - 1) for p in prey):
+        return (x, y - 1)
+    if any(p.pos == (x, y + 1) for p in prey):
+        return (x, y + 1)
+    if any(p.pos == (x + 1, y - 1) for p in prey):
+        return (x + 1, y - 1)
+    if any(p.pos == (x + 1, y) for p in prey):
+        return (x + 1, y)
+    if any(p.pos == (x + 1, y + 1) for p in prey):
+        return (x + 1, y + 1)
     return None
 
 
@@ -120,7 +123,7 @@ def breed(animals, refractory_period):
 def feed(predators, prey):
     for predator in predators:
         for meal in prey:
-            if predator.pos == meal.pos:
+            if predator.pos == meal.pos and predator.calories != CALORIES_MAX:
                 predator.calories += meal.calories
                 predator.calories = min(predator.calories, CALORIES_MAX)
                 prey.remove(meal)
@@ -148,9 +151,9 @@ def update(frame_num, img, grid, rabbits, wolves, grass):
     n_rabbits = len(rabbits)
     update_animals(rabbits, MAX_AGE_RABBIT)
     for r in rabbits:
-        grass_pos = nearest_grass(r.pos, grass)
-        if grass_pos != None:
-            r.pos = grass_pos
+        prey_pos = nearest_prey(r.pos, grass)
+        if prey_pos is not None:
+            r.pos = prey_pos
 
     n_rabbits_killed = n_rabbits - len(rabbits)
     if n_rabbits_killed > 0:
@@ -158,6 +161,10 @@ def update(frame_num, img, grid, rabbits, wolves, grass):
     # Update position, age and calories of wolves.
     n_wolves = len(wolves)
     update_animals(wolves, MAX_AGE_WOLF)
+    for w in wolves:
+        prey_pos = nearest_prey(w.pos, rabbits)
+        if prey_pos is not None:
+            w.pos = prey_pos
     n_wolves_killed = n_wolves - len(wolves)
     if n_wolves_killed > 0:
         print(n_wolves_killed, 'elderly wolves died of old age or starvation', len(wolves), 'remain')
@@ -207,7 +214,6 @@ def update(frame_num, img, grid, rabbits, wolves, grass):
 
 grid = np.zeros((N, N, 3), dtype=np.uint8)
 
-
 rabbits = []
 for _ in range(INITIAL_RABBITS):
     x = np.random.randint(0, N)
@@ -232,6 +238,13 @@ for _ in range(INITIAL_GRASS):
     g = Grass((x, y), rate=GRASS_RATE, calories=calories)
     grass.append(g)
 
+# bears = []
+# for _ in range(INITIAL_BEARS):
+#     x = np.random.randint(0, N)
+#     y = np.random.randint(0, N)
+#     age = np.random.randint(0, MAX_AGE_BEAR)
+#     r = Animal((x, y), age, random_gender(), 0, CALORIES_MAX)
+#     bears.append(r)
 
 fig, ax = plt.subplots()
 img = ax.imshow(grid)
