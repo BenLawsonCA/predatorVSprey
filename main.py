@@ -7,13 +7,13 @@ MAX_AGE_WOLF = 500
 
 N = 128  # Grid size.
 
-INITIAL_RABBITS = 15  # Number of initial rabbits.
-INITIAL_WOLVES = 15  # Number of initial wolves.
-INITIAL_GRASS = 300
+INITIAL_RABBITS = 0  # Number of initial rabbits.
+INITIAL_WOLVES = 0  # Number of initial wolves.
+INITIAL_GRASS = 50
 REFRACTORY_PERIOD_RABBIT = 9
 REFRACTORY_PERIOD_WOLF = 9
 
-GRASS_RATE = 0.1
+GRASS_RATE = 10
 
 CALORIES_MAX = 100
 CALORIES_MEAL = 25
@@ -102,13 +102,14 @@ def feed(predators, prey):
                 predator.calories = min(predator.calories, CALORIES_MAX)
                 prey.remove(meal)
 
+
 def grow(grass):
     for g in grass:
         g.grow()
         if g.calories == CALORIES_MAX:
             adj = random_walk(g.pos)
             if not any(grass_tile.pos == adj for grass_tile in grass):
-                new_grass = Grass(pos=adj, rate=1, calories=0)
+                new_grass = Grass(pos=adj, rate=GRASS_RATE, calories=0)
                 grass.append(new_grass)
 
 
