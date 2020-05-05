@@ -24,7 +24,6 @@ COLOR_RABBIT = (0, 0, 255)  # (r, g, b)
 COLOR_WOLF = (255, 0, 0)  # (r, g, b)
 # COLOR_BEAR = (117, 71, 22)
 
-
 class Grass:
     def __init__(self, pos, rate, calories):
         self.pos = pos
@@ -44,7 +43,6 @@ class Animal:
         self.sex = sex
         self.breed = breed
         self.calories = calories
-
 
 def random_walk(pos):
     """Randomly step in a direction and return a new position."""
@@ -146,6 +144,7 @@ def update(frame_num, img, grid, rabbits, wolves, grass):
     n_grass_grown = len(grass) - n_grass
     if n_grass_grown > 0:
         print(n_grass_grown, 'new patches of grass', len(grass), 'total')
+
 
     # Update position, age and calories of rabbits.
     n_rabbits = len(rabbits)
