@@ -2,21 +2,20 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation
 
-MAX_AGE_RABBIT = 700
-MAX_AGE_WOLF = 500
+MAX_AGE_RABBIT = 50
+MAX_AGE_WOLF = 80
 
-N = 128  # Grid size.
+N = 32  # Grid size.
 
-INITIAL_RABBITS = 0  # Number of initial rabbits.
-INITIAL_WOLVES = 0  # Number of initial wolves.
-INITIAL_GRASS = 50
-REFRACTORY_PERIOD_RABBIT = 9
-REFRACTORY_PERIOD_WOLF = 9
+INITIAL_RABBITS = 50  # Number of initial rabbits.
+INITIAL_WOLVES = 50  # Number of initial wolves.
+INITIAL_GRASS = 150
+REFRACTORY_PERIOD_RABBIT = 3
+REFRACTORY_PERIOD_WOLF = 4
 
-GRASS_RATE = 10
-
+GRASS_RATE = 50
 CALORIES_MAX = 100
-CALORIES_MEAL = 25
+CALORIES_MEAL = 100
 
 COLOR_GRASS = (0, 255, 0)
 COLOR_RABBIT = (0, 0, 255)  # (r, g, b)
@@ -59,6 +58,29 @@ def random_gender():
     return 'm' if np.random.random() > 0.5 else 'f'
 
 
+def nearest_grass(pos, grass):
+    x, y = pos
+    if any(g.pos == (x, y) for g in grass):
+        return (x, y)
+    if any(g.pos == (x-1, y-1) for g in grass):
+        return (x-1, y-1)
+    if any(g.pos == (x-1, y) for g in grass):
+        return (x-1, y)
+    if any(g.pos == (x-1, y+1) for g in grass):
+        return (x-1, y+1)
+    if any(g.pos == (x, y-1) for g in grass):
+        return (x, y-1)
+    if any(g.pos == (x, y+1) for g in grass):
+        return (x, y+1)
+    if any(g.pos == (x+1, y-1) for g in grass):
+        return (x+1, y-1)
+    if any(g.pos == (x+1, y) for g in grass):
+        return (x+1, y)
+    if any(g.pos == (x+1, y+1) for g in grass):
+        return (x+1, y+1)
+    return None
+
+
 def update_animals(animals, max_age):
     for a in animals:
         a.pos = random_walk(a.pos)
@@ -86,8 +108,9 @@ def breed(animals, refractory_period):
                            age=0,
                            sex=random_gender(),
                            breed=refractory_period,
-                           calories=5)
-
+                           calories=4)
+            a.calories -= 2
+            b.calories -= 2
             animals.append(child)
             # Set breed timer.
             a.breed = refractory_period
@@ -98,7 +121,7 @@ def feed(predators, prey):
     for predator in predators:
         for meal in prey:
             if predator.pos == meal.pos:
-                predator.calories += CALORIES_MEAL
+                predator.calories += meal.calories
                 predator.calories = min(predator.calories, CALORIES_MAX)
                 prey.remove(meal)
 
@@ -124,6 +147,11 @@ def update(frame_num, img, grid, rabbits, wolves, grass):
     # Update position, age and calories of rabbits.
     n_rabbits = len(rabbits)
     update_animals(rabbits, MAX_AGE_RABBIT)
+    for r in rabbits:
+        grass_pos = nearest_grass(r.pos, grass)
+        if grass_pos != None:
+            r.pos = grass_pos
+
     n_rabbits_killed = n_rabbits - len(rabbits)
     if n_rabbits_killed > 0:
         print(n_rabbits_killed, 'elderly bunnies died of old age or starvation.', len(rabbits), 'remain')
@@ -185,7 +213,7 @@ for _ in range(INITIAL_RABBITS):
     x = np.random.randint(0, N)
     y = np.random.randint(0, N)
     age = np.random.randint(0, MAX_AGE_RABBIT)
-    r = Animal((x, y), age, random_gender(), 0, CALORIES_MEAL)
+    r = Animal((x, y), age, random_gender(), 0, CALORIES_MAX)
     rabbits.append(r)
 
 wolves = []
@@ -193,7 +221,7 @@ for _ in range(INITIAL_WOLVES):
     x = np.random.randint(0, N)
     y = np.random.randint(0, N)
     age = np.random.randint(0, MAX_AGE_WOLF)
-    r = Animal((x, y), age, random_gender(), 0, CALORIES_MEAL)
+    r = Animal((x, y), age, random_gender(), 0, CALORIES_MAX)
     wolves.append(r)
 
 grass = []
@@ -209,8 +237,8 @@ fig, ax = plt.subplots()
 img = ax.imshow(grid)
 ani = matplotlib.animation.FuncAnimation(fig, update,
                                          fargs=(img, grid, rabbits, wolves, grass),
-                                         frames=10,
-                                         interval=150,
+                                         frames=100,
+                                         interval=5,
                                          save_count=50)
 
 plt.show()
