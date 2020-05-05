@@ -1,3 +1,4 @@
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation
@@ -8,8 +9,11 @@ WOLF = 2
 MAX_AGE = 700
 REFRACTORY_PERIOD = 10
 N = 128  # Grid size.
-INITIAL_POP = 40  # Number of initial rabbits.
+INITIAL_RABBITS = 40  # Number of initial rabbits.
+INITIAL_WOLVES = 40  # Number of initial wolves.
 
+COLOR_RABBIT = (0, 255, 0)  # (r, g, b)
+COLOR_WOLF = (255, 0, 0)  # (r, g, b)
 
 class Rabbit:
     def __init__(self, age, sex, breed, pos=(0, 0)):
@@ -18,7 +22,6 @@ class Rabbit:
         self.sex = sex
         self.pos = pos
         self.breed = breed
-
 
 
 def initialize(grid, n):
@@ -43,7 +46,7 @@ def random_walk(pos):
     return x_next, y_next
 
 
-def update(frame_num, img, grid, rabbits):
+def update(frame_num, img, grid, rabbits, wolves):
     # Update position of all rabbits.
     for n in rabbits:
         n.pos = random_walk(n.pos)
@@ -66,31 +69,45 @@ def update(frame_num, img, grid, rabbits):
                         print('bow chica wow wow', a.pos, len(rabbits))
                         new = Rabbit(0, 'm', 0, a.pos)
                         rabbits.append(new)
-    next_grid = np.zeros((N, N))
+    # Draw the image to display. NxN pixels, each pixel has 3 color channels (r, g, b).
+    next_grid = np.zeros((N, N, 3), dtype=np.uint8)
     for n in range(len(rabbits)):
         x = rabbits[n].pos[0]
         y = rabbits[n].pos[1]
-        next_grid[x][y] = -rabbits[n].age
+        next_grid[x][y] = COLOR_RABBIT
+    for n in range(len(wolves)):
+        x = wolves[n].pos[0]
+        y = wolves[n].pos[1]
+        next_grid[x][y] = COLOR_WOLF
+
     img.set_data(next_grid)
     grid[:] = next_grid[:]
     return img
 
 
-grid = np.zeros((N, N))
-grid = initialize(grid, INITIAL_POP)
+grid = np.zeros((N, N, 3), dtype=np.uint8)
+# grid = initialize(grid, INITIAL_POP)
 
 rabbits = []
-for _ in range(INITIAL_POP):
+for _ in range(INITIAL_RABBITS):
     x = np.random.randint(0, N)
     y = np.random.randint(0, N)
     age = np.random.randint(100, MAX_AGE)
     r = Rabbit(age, 'm', 0, (x, y))
     rabbits.append(r)
 
+wolves = []
+for _ in range(INITIAL_WOLVES):
+    x = np.random.randint(0, N)
+    y = np.random.randint(0, N)
+    age = np.random.randint(100, MAX_AGE)
+    r = Rabbit(age, 'm', 0, (x, y))
+    wolves.append(r)
+
 fig, ax = plt.subplots()
-img = ax.imshow(grid, vmin= -MAX_AGE, vmax=0)
+img = ax.imshow(grid)
 ani = matplotlib.animation.FuncAnimation(fig, update,
-                                         fargs=(img, grid, rabbits),
+                                         fargs=(img, grid, rabbits, wolves),
                                          frames=10,
                                          interval=50,
                                          save_count=50)
