@@ -150,14 +150,12 @@ def update(frame_num, img, grid, rabbits, wolves, grass):
     n_rabbits_eaten = len(rabbits) - n_rabbits
     if n_rabbits_eaten > 0:
         print(n_rabbits_killed, 'slow rabbits were devoured', len(rabbits), 'total')
-    # Wolf nom rabbit.
+    # Rabbit nom grass.
     n_grass = len(grass)
     feed(rabbits, grass)
     n_grass_eaten = len(grass) - n_grass
     if n_grass_eaten > 0:
         print(n_grass_killed, 'innocent patches of grass were devoured.', len(grass), 'total')
-    feed(wolves, rabbits)
-    feed(rabbits, grass)
 
     # Draw the image to display. NxN pixels, each pixel has 3 color channels (r, g, b).
     next_grid = np.zeros((N, N, 3), dtype=np.uint8)
