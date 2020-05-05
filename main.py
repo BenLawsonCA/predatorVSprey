@@ -237,6 +237,7 @@ for _ in range(INITIAL_GRASS):
     g = Grass((x, y), rate=GRASS_RATE, calories=calories)
     grass.append(g)
 
+#
 # bears = []
 # for _ in range(INITIAL_BEARS):
 #     x = np.random.randint(0, N)
