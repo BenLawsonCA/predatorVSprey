@@ -9,20 +9,24 @@ N_PLOT_POINTS = 100
 
 N = 32  # Grid size.
 
-INITIAL_RABBITS = 30  # Number of initial rabbits.
-INITIAL_WOLVES = 8  # Number of initial wolves.
+INITIAL_RABBITS = 50  # Number of initial rabbits.
+INITIAL_WOLVES = 20  # Number of initial wolves.
 # INITIAL_BEARS = 5
-INITIAL_GRASS = 150
+INITIAL_GRASS = 50
 REFRACTORY_PERIOD_RABBIT = 3
 REFRACTORY_PERIOD_WOLF = 5
 
 GRASS_RATE = 50
-CALORIES_MAX = 100
+CALORIES_MAX_GRASS = 50
+CALORIES_MAX_PREDATOR = 200
+CALORIES_MAX_PREY = 100
 CALORIES_MEAL = 100
 
 COLOR_GRASS = (0, 168, 107)
 COLOR_RABBIT = (0, 0, 255)  # (r, g, b)
 COLOR_WOLF = (255, 0, 0)  # (r, g, b)
+
+
 # COLOR_BEAR = (117, 71, 22)
 
 class Grass:
@@ -33,7 +37,7 @@ class Grass:
 
     def grow(self):
         self.calories += self.rate
-        self.calories = min(self.calories, CALORIES_MAX)
+        self.calories = min(self.calories, CALORIES_MAX_GRASS)
 
 
 class Animal:
@@ -44,6 +48,15 @@ class Animal:
         self.sex = sex
         self.breed = breed
         self.calories = calories
+
+
+class Prey(Animal):
+    pass
+
+
+class Predator(Animal):
+    pass
+
 
 def random_walk(pos):
     """Randomly step in a direction and return a new position."""
@@ -106,13 +119,15 @@ def breed(animals, refractory_period):
             if a.sex == b.sex:
                 continue
             # Breed.
+            # Child takes 25% of calories from each parent
+            childCalories = (a.calories * .25) + (b.calories * .25)
             child = Animal(pos=a.pos,
                            age=0,
                            sex=random_gender(),
                            breed=refractory_period,
-                           calories=4)
-            a.calories -= 2
-            b.calories -= 2
+                           calories=childCalories)
+            a.calories -= (a.calories * .25)
+            b.calories -= (b.calories * .25)
             animals.append(child)
             # Set breed timer.
             a.breed = refractory_period
@@ -122,16 +137,16 @@ def breed(animals, refractory_period):
 def feed(predators, prey):
     for predator in predators:
         for meal in prey:
-            if predator.pos == meal.pos and predator.calories != CALORIES_MAX:
+            if predator.pos == meal.pos and predator.calories != CALORIES_MAX_PREDATOR:
                 predator.calories += meal.calories
-                predator.calories = min(predator.calories, CALORIES_MAX)
+                predator.calories = min(predator.calories, CALORIES_MAX_PREDATOR)
                 prey.remove(meal)
 
 
 def grow(grass):
     for g in grass:
         g.grow()
-        if g.calories == CALORIES_MAX:
+        if g.calories == CALORIES_MAX_GRASS:
             adj = random_walk(g.pos)
             if not any(grass_tile.pos == adj for grass_tile in grass):
                 new_grass = Grass(pos=adj, rate=GRASS_RATE, calories=0)
@@ -145,12 +160,13 @@ def draw(rabbits, wolves, grass):
         x, y = r.pos
         grid[x][y] = COLOR_RABBIT
     for w in wolves:
-        x, y = r.pos
+        x, y = w.pos
         grid[x][y] = COLOR_WOLF
     for g in grass:
         x, y = g.pos
         grid[x][y] = COLOR_GRASS
     return grid
+
 
 def update(frame_num, img, grid, rabbits, wolves, grass):
     # Grow grass.
@@ -159,7 +175,6 @@ def update(frame_num, img, grid, rabbits, wolves, grass):
     n_grass_grown = len(grass) - n_grass
     if n_grass_grown > 0:
         print(n_grass_grown, 'new patches of grass', len(grass), 'total')
-
 
     # Update position, age and calories of rabbits.
     n_rabbits = len(rabbits)
@@ -206,6 +221,7 @@ def update(frame_num, img, grid, rabbits, wolves, grass):
     n_grass_eaten = n_grass - len(grass)
     if n_grass_eaten > 0:
         print(n_grass_eaten, 'innocent patches of grass were devoured.', len(grass), 'total')
+
     hist_n_rabbits.append(n_rabbits)
     hist_n_wolves.append(n_wolves)
     hist_n_grass.append(n_grass)
@@ -213,7 +229,7 @@ def update(frame_num, img, grid, rabbits, wolves, grass):
         hist_n_rabbits.pop(0)
         hist_n_wolves.pop(0)
         hist_n_grass.pop(0)
-    hist_x = range(len(hist_n_rabbits))
+    #hist_x = range(len(hist_n_rabbits))
     hist_n_rabbits.append(n_rabbits)
     hist_n_wolves.append(n_wolves)
     hist_n_grass.append(n_grass)
@@ -242,7 +258,7 @@ for _ in range(INITIAL_RABBITS):
     x = np.random.randint(0, N)
     y = np.random.randint(0, N)
     age = np.random.randint(0, MAX_AGE_RABBIT)
-    r = Animal((x, y), age, random_gender(), 0, CALORIES_MAX)
+    r = Prey((x, y), age, random_gender(), 0, CALORIES_MAX_PREY)
     rabbits.append(r)
 
 wolves = []
@@ -250,14 +266,14 @@ for _ in range(INITIAL_WOLVES):
     x = np.random.randint(0, N)
     y = np.random.randint(0, N)
     age = np.random.randint(0, MAX_AGE_WOLF)
-    r = Animal((x, y), age, random_gender(), 0, CALORIES_MAX)
+    r = Predator((x, y), age, random_gender(), 0, CALORIES_MAX_PREDATOR)
     wolves.append(r)
 
 grass = []
 for _ in range(INITIAL_GRASS):
     x = np.random.randint(0, N)
     y = np.random.randint(0, N)
-    calories = np.random.randint(0, CALORIES_MAX)
+    calories = np.random.randint(0, CALORIES_MAX_GRASS)
     g = Grass((x, y), rate=GRASS_RATE, calories=calories)
     grass.append(g)
 
