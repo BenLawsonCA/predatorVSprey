@@ -4,7 +4,7 @@ import matplotlib.animation
 
 MAX_AGE_RABBIT = 50
 MAX_AGE_WOLF = 80
-MAX_AGE_BEAR = 80
+# MAX_AGE_BEAR = 80
 N_PLOT_POINTS = 100
 
 N = 32  # Grid size.
